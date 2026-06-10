@@ -59,7 +59,34 @@ with col3:
     st.metric("Aware of Company Benefits", f"{knows_benefits:.1f}%")
 with col4:
     remote_pct = (len(filtered_df[filtered_df['remote_work'] == 'Yes']) / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-    st.metric("Remote Workforce Rate", f"{remote_pct:.1f}%")
+    with row_col2:
+    st.subheader("🏢 Benefits Awareness Level")
+    
+    # Check which column exists to avoid KeyError
+    size_col = None
+    for col in ['no_employees', 'no_of_employees', 'employees']:
+        if col in filtered_df.columns:
+            size_col = col
+            break
+            
+    if size_col and len(filtered_df) > 0:
+        # Cleaned line: successfully creating the percentage cross tabulation matrix
+        cross_tab = pd.crosstab(filtered_df[size_col], filtered_df['benefits'], normalize='index') * 100
+        fig2, ax2 = plt.subplots(figsize=(7, 4.5))
+        cross_tab.plot(kind='bar', stacked=True, colormap='Set3', ax=ax2)
+        plt.xlabel("Company Size or Group")
+        plt.ylabel("Percentage (%)")
+        plt.xticks(rotation=45)
+        plt.legend(title="Offers Benefits?")
+        plt.tight_layout()
+        st.pyplot(fig2)
+    else:
+        # Fallback chart if the company size column is completely unreadable
+        st.write("📊 Overall Benefits Breakdown:")
+        fig2, ax2 = plt.subplots(figsize=(7, 4.5))
+        filtered_df['benefits'].value_counts().plot(kind='pie', autopct='%1.1f%%', colormap='Pastel1', ax=ax2)
+        plt.ylabel('')
+        st.pyplot(fig2)
 
 # 5. Charts Visualization Row
 st.markdown("---")
