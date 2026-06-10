@@ -14,12 +14,8 @@ st.write("This interactive application maps out workplace health trends and runs
 # 2. Load and Clean Dataset
 @st.cache_data
 def load_and_clean_data():
-    # Load the survey file
-   # Change this line:
-data = pd.read_csv('Desktop/DocumentsPublic_Health_Project/survey.csv')
-
-# TO THIS EXACT LINE:
-data = pd.read_csv('survey.csv')
+    # Direct repository read
+    data = pd.read_csv('survey.csv')
     
     # Clean Age boundaries
     data['Age'] = pd.to_numeric(data['Age'], errors='coerce')
@@ -59,34 +55,7 @@ with col3:
     st.metric("Aware of Company Benefits", f"{knows_benefits:.1f}%")
 with col4:
     remote_pct = (len(filtered_df[filtered_df['remote_work'] == 'Yes']) / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-    with row_col2:
-    st.subheader("🏢 Benefits Awareness Level")
-    
-    # Check which column exists to avoid KeyError
-    size_col = None
-    for col in ['no_employees', 'no_of_employees', 'employees']:
-        if col in filtered_df.columns:
-            size_col = col
-            break
-            
-    if size_col and len(filtered_df) > 0:
-        # Cleaned line: successfully creating the percentage cross tabulation matrix
-        cross_tab = pd.crosstab(filtered_df[size_col], filtered_df['benefits'], normalize='index') * 100
-        fig2, ax2 = plt.subplots(figsize=(7, 4.5))
-        cross_tab.plot(kind='bar', stacked=True, colormap='Set3', ax=ax2)
-        plt.xlabel("Company Size or Group")
-        plt.ylabel("Percentage (%)")
-        plt.xticks(rotation=45)
-        plt.legend(title="Offers Benefits?")
-        plt.tight_layout()
-        st.pyplot(fig2)
-    else:
-        # Fallback chart if the company size column is completely unreadable
-        st.write("📊 Overall Benefits Breakdown:")
-        fig2, ax2 = plt.subplots(figsize=(7, 4.5))
-        filtered_df['benefits'].value_counts().plot(kind='pie', autopct='%1.1f%%', colormap='Pastel1', ax=ax2)
-        plt.ylabel('')
-        st.pyplot(fig2)
+    st.metric("Remote Workforce Rate", f"{remote_pct:.1f}%")
 
 # 5. Charts Visualization Row
 st.markdown("---")
@@ -109,28 +78,38 @@ with row_col1:
     st.pyplot(fig1)
 
 with row_col2:
-    st.subheader("🏢 Benefits Awareness Level by Company Size")
-    # Build cross tabulation percentages dynamically
-    if len(filtered_df) > 0:
-        cross_tab = pd.crosstab(filtered_df['no_employees'], filtered_df['benefits'], normalize='index') * 100
+    st.subheader("🏢 Benefits Awareness Level")
+    
+    # Check which column exists to avoid KeyError dynamically
+    size_col = None
+    for col in ['no_employees', 'no_of_employees', 'employees']:
+        if col in filtered_df.columns:
+            size_col = col
+            break
+            
+    if size_col and len(filtered_df) > 0:
+        cross_tab = pd.crosstab(filtered_df[size_col], filtered_df['benefits'], normalize='index') * 100
         fig2, ax2 = plt.subplots(figsize=(7, 4.5))
         cross_tab.plot(kind='bar', stacked=True, colormap='Set3', ax=ax2)
-        plt.xlabel("Company Size Category")
+        plt.xlabel("Company Size or Group")
         plt.ylabel("Percentage (%)")
         plt.xticks(rotation=45)
         plt.legend(title="Offers Benefits?")
         plt.tight_layout()
         st.pyplot(fig2)
     else:
-        st.write("No data available for the active filters.")
+        st.write("📊 Overall Benefits Breakdown:")
+        fig2, ax2 = plt.subplots(figsize=(7, 4.5))
+        filtered_df['benefits'].value_counts().plot(kind='pie', autopct='%1.1f%%', colormap='Pastel1', ax=ax2)
+        plt.ylabel('')
+        st.pyplot(fig2)
 
 # 6. Inferential Statistical Analysis Section
 st.markdown("---")
 st.subheader("🔬 Live Inferential Statistics: Chi-Square Test of Independence")
-st.write("Hypothesis Testing: Does having a **family history of mental illness** significantly increase an employee's likelihood to **seek treatment** within the current selected filter criteria?")
+st.write("Hypothesis Testing: Does having a **family history of mental illness** significantly increase an employee's likelihood to **seek treatment**?")
 
 if len(filtered_df) > 5:
-    # Run dynamic contingency matrix
     matrix = pd.crosstab(filtered_df['family_history'], filtered_df['treatment'])
     chi2, p_val, dof, exp = chi2_contingency(matrix)
     
@@ -143,8 +122,8 @@ if len(filtered_df) > 5:
         st.markdown(f"**P-Value (Statistical Significance):** `{p_val:.6f}`")
         
         if p_val < 0.05:
-            st.success("🎯 **Statistical Outcome:** Highly Significant ($p < 0.05$). The correlation between family health background and individual care-seeking behavior is mathematically verified for this subgroup.")
+            st.success("🎯 **Statistical Outcome:** Highly Significant ($p < 0.05$). The correlation between family health background and individual care-seeking behavior is mathematically verified.")
         else:
-            st.warning("⚠️ **Statistical Outcome:** Not Significant ($p \geq 0.05$). We fail to reject the null hypothesis for this specific filtered subset.")
+            st.warning("⚠️ **Statistical Outcome:** Not Significant ($p \geq 0.05$). We fail to reject the null hypothesis.")
 else:
-    st.error("Insufficent records filtered to safely run a Chi-Square calculation.")
+    st.error("Insufficient records filtered to safely run a Chi-Square calculation.")
