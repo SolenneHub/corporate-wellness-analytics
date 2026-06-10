@@ -15,7 +15,11 @@ st.write("This interactive application maps out workplace health trends and runs
 @st.cache_data
 def load_and_clean_data():
     # Load the survey file
-    data = pd.read_csv('Desktop/DocumentsPublic_Health_Project/survey.csv')
+   # Change this line:
+data = pd.read_csv('Desktop/DocumentsPublic_Health_Project/survey.csv')
+
+# TO THIS EXACT LINE:
+data = pd.read_csv('survey.csv')
     
     # Clean Age boundaries
     data['Age'] = pd.to_numeric(data['Age'], errors='coerce')
